@@ -16,12 +16,23 @@ model User {
   password      String
   alias         String?
   enabled       Boolean   @default(true)
+  lists         List[]
 }
 
 model List {
   id            Int       @id @default(autoincrement())
   name          String
   description   String?
-  items         String
+  items         Item[]
+  enabled       Boolean   @default(true)
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id])
+}
+
+model Item {
+  id            Int    @id @default(autoincrement())
+  name          String
+  listId        Int
+  list          List   @relation(fields: [listId], references: [id])
   enabled       Boolean   @default(true)
 }
