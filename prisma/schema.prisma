@@ -30,9 +30,10 @@ model List {
 }
 
 model Item {
-  id            Int    @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   name          String
   listId        Int
-  list          List   @relation(fields: [listId], references: [id])
+  list          List      @relation(fields: [listId], references: [id])
   enabled       Boolean   @default(true)
+  completed     Boolean   @default(false)
 }
