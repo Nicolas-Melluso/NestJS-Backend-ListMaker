@@ -2,6 +2,7 @@ import { ConsoleLogger, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ListsService {
@@ -42,19 +43,106 @@ export class ListsService {
     }
   }
 
-  findAll() {
-    return `This action returns all lists`;
+  async findAll() {
+
+    try {
+      const lists = await this.prismaService.list.findMany({
+        where: {
+          enabled: true
+        }
+      });
+      
+      if (lists.length === 0) {
+        return "There isn't nothing yet";
+      }
+
+      return lists;
+    } catch (error) {
+      throw Error(`An error has ocurred: ${error.message}`);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} list`;
+  async findOne(id: number) {
+    try {
+
+      const list = await this.prismaService.list.findFirst({
+        where: {
+          id,
+          enabled: true
+        }
+      });
+
+      if (list === null) {
+        throw new NotFoundException('User is not enabled or not exist');
+      }
+
+      return list;
+    } catch (error) {
+
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+
+      throw new Error(`An error has ocurred: ${error.message}`);
+    }
   }
 
-  update(id: number, updateListDto: UpdateListDto) {
-    return `This action updates a #${id} list`;
+  async update(id: number, updateListDto: UpdateListDto) {
+    try {
+      const listExist = await this.findOne(id);
+
+      if(!listExist) {
+        throw new NotFoundException(`The list is not updated because was not founded`);
+      }
+
+      const listUpdated = await this.prismaService.list.update({
+        where: { id },
+        data: {
+          name: updateListDto.name,
+          description: updateListDto.description
+        }
+      });
+
+      this.logger.debug(`The list with the id ${id} was updated: ${JSON.stringify(listUpdated)}`);
+
+      return listUpdated;
+    } catch (error) {
+      this.logger.error(`This error is happend: ${error}`);
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      
+      throw Error(`An error has ocurred: ${error.message}`);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} list`;
+  async remove(id: number) {
+    try {
+      const listExist = await this.findOne(id);
+
+      if(!listExist) {
+        throw new NotFoundException(`The list is already removed`);
+      }
+
+      const listRemoved = await this.prismaService.list.update({
+        where: { id },
+        data: {
+          enabled: false
+        }
+      });
+
+      this.logger.debug(`The list with the id ${id} was removed: ${JSON.stringify(listRemoved)}`);
+
+      return listRemoved;
+    } catch (error) {
+      this.logger.error(`This error is happend: ${error}`);
+
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      
+      throw Error(`An error has ocurred: ${error.message}`);
+    }
   }
 }
