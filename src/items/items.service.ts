@@ -5,7 +5,11 @@ import { UpdateItemDto } from './dto/update-item.dto';
 @Injectable()
 export class ItemsService {
   create(createItemDto: CreateItemDto) {
-    return 'This action adds a new item';
+    try {
+      return 'This action adds a new item';
+    } catch (error) {
+      
+    }
   }
 
   findAll() {
